@@ -601,7 +601,7 @@ const postfixOperators = ['!'];
 const prefixOperators = ['√'];
 
 // setting the possible operations by their priority based on PEMDAS
-// (parentheses are always top priority, they are dealth with differently below)
+// (parentheses are always top priority, they are dealt with recursively)
 const priorities = [
   { // priority 0
     operations: {
