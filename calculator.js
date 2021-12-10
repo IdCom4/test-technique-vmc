@@ -11,9 +11,14 @@ function ComputeCalcul(strIndex, strCalcul) {
 
       // create the vars
       let firstNumberData = null;
-      let operator = null;
-      let soloValueOperator = null;
       let secondNumberData = null;
+
+      // operator is used to store any operator we come across
+      let operator = null;
+      // currentPriorityOperator is used to store an operator of the current priority
+      let currentPriorityOperator = null;
+      // soloValueOperator is used to store the operators that only requires one value, like the factorial '!'
+      let soloValueOperator = null;
 
       // we do this to keep the initial strIndex in memory
       let index = strIndex;
@@ -24,7 +29,7 @@ function ComputeCalcul(strIndex, strCalcul) {
         const c = strCalcul[index];
 
         // trying to parse a number
-        let numberData = tryParseNumber(index, strCalcul, operator);
+        let numberData = tryParseNumber(index, strCalcul, currentPriorityOperator);
 
         // means we didn't find any number
         if (numberData == false) {
@@ -40,9 +45,16 @@ function ComputeCalcul(strIndex, strCalcul) {
           // checking if the symbol is an operator
           else if (isSupportedOperator(c)) {
 
+            operator = c;
+
+            // check for extra currentPriorityOperator
+            if (currentPriorityOperator != null)
+              throw new Error("Invalid synthax: extra operator '" + c + "' found at index " + `${index} in "${strCalcul}"`);
+  
             // checking if it's an operation of the current priority
+            // and if so setting operator to it's value
             if (priorities[priority].operations[c] != undefined)
-              operator = c;
+              currentPriorityOperator = c;
 
             index++;
           }
@@ -103,7 +115,7 @@ function ComputeCalcul(strIndex, strCalcul) {
           // was not a number, nor an operator, nor a parenthese
           // it's an invalid synthax
           else
-            throw new Error("Invalid synthax: " + `${c} found at index ${index}`);
+            throw new Error("Invalid synthax: " + `${c} found at index ${index} in "${strCalcul}"`);
         }
         else
           index = numberData.endIndex + 1;
@@ -147,12 +159,18 @@ function ComputeCalcul(strIndex, strCalcul) {
             soloValueOperator = null;
           }
 
+          // if this condition is true, it means that there is already a firstNumber
+          // and that we found a second one stored in numberData,
+          // but we never found any operator between
+          if (firstNumberData && !operator)
+            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
+
           // storing it in the right variable
           // if there is no firstNumber, storing it there
-          // or if there is no operator
+          // or if there is no currentPriorityOperator
           // because it means that the previously stored number in firstNumberData
           // if for a calcul of lower priority than the current
-          if (!firstNumberData || !operator) firstNumberData = numberData;
+          if (!firstNumberData || !currentPriorityOperator) firstNumberData = numberData;
           // we store it in the second only if there is a firstNumber and an operator
           else secondNumberData = numberData;
 
@@ -161,8 +179,12 @@ function ComputeCalcul(strIndex, strCalcul) {
         // checking if we have all the required data to do the maths
         if (firstNumberData && secondNumberData) {
 
+          // check is there is a valid currentPriorityOperator
+          if (currentPriorityOperator == null)
+            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
+
           // doing the calcul
-          const result = priorities[priority].operations[operator](firstNumberData.number, secondNumberData.number);
+          const result = priorities[priority].operations[currentPriorityOperator](firstNumberData.number, secondNumberData.number);
 
           // updating the strCalcul by replacing the 2 numbers and the operator to only the result
           const updatedStringData = updateString(firstNumberData.startIndex, secondNumberData.endIndex, strCalcul, result);
@@ -180,7 +202,7 @@ function ComputeCalcul(strIndex, strCalcul) {
           };
 
           secondNumberData = null;
-          operator = null;
+          currentPriorityOperator = null;
         }
       }
     }
@@ -284,7 +306,12 @@ function tryParseNumber(start, strCalcul, operator) {
     // if we find an operator while this is not the first char of the calcul
     // and there is still no found operator in the main calcul
     // that means this sign is not part of the number but is an operator
-    if (start != 0 && !operator && (strCalcul[i] == '+' || strCalcul[i] == '-'))
+    if (
+      (strCalcul[i] == '+' || strCalcul[i] == '-') && // if we find an operator
+      !operator &&                                    // and there no found operator yet
+      start != 0 &&                                   // and it is not the first char of a calcul
+      strCalcul[start - 1] != '('                     // and the previous char is not a '(', which makes it the first char of a calcul for the recursive
+    )
       return false;
   
     // if true, skip it because it's positive by default
@@ -362,7 +389,7 @@ function tryParseNumber(start, strCalcul, operator) {
   else if (i == start + 1 && isSigned == true) // means we only found a + or -, probably as operators
     return false
   else if (i != start && result == null) // the only way for that to be true is to have found only a floating symbol, which cannot be valid
-    throw new Error("Invalid syntax: " + `'${strCalcul[start]}' found at index: ${start}`);
+    throw new Error("Invalid syntax: " + `'${strCalcul[start]}' found at index: ${start} in "${strCalcul}"`);
 
   // that means we have a number, so returning an object
   // that contains it multiplied by it's sign, and it's end index
