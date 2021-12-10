@@ -17,8 +17,9 @@ function ComputeCalcul(strIndex, strCalcul) {
       let operator = null;
       // currentPriorityOperator is used to store an operator of the current priority
       let currentPriorityOperator = null;
-      // soloValueOperator is used to store the operators that only requires one value, like the factorial '!'
-      let soloValueOperator = null;
+      // those are used to store the operators that only requires one value, like the factorial '!'
+      let prefixOperator = null;
+      let postfixOperator = null;
 
       // we do this to keep the initial strIndex in memory
       let index = strIndex;
@@ -34,11 +35,10 @@ function ComputeCalcul(strIndex, strCalcul) {
         // means we didn't find any number
         if (numberData == false) {
 
-          // check first the sqrt as it only requires one value and comes before it
-          // and check if we are at the right priority pass
-          // (we should always be if we find it, but security first children !)
-          if (c == '√' && priorities[priority].operations['√'] != undefined) {
-            soloValueOperator = c;
+          // check first for the prefix operators as they only requires one value and come before it
+          // and check if we are at the right priority pass for this operator
+          if (isPrefixOperator(c) && priorities[priority].operations[c] != undefined) {
+            prefixOperator = c;
             index++;
           }
 
@@ -95,12 +95,12 @@ function ComputeCalcul(strIndex, strCalcul) {
 
             // setting the data
             strCalcul = updatedStringData.newString;
-            index = updatedStringData.endOfUpdateIndex + 1;
+            index = updatedStringData.endOfUpdateIndex;
 
             numberData = {
               number: parentheseResult.number,
               startIndex: openingParentheseIndex,
-              endIndex: updatedStringData.endOfUpdateIndex
+              endIndex: updatedStringData.endOfUpdateIndex - 1
             };
       
           }
@@ -119,44 +119,51 @@ function ComputeCalcul(strIndex, strCalcul) {
         }
         else
           index = numberData.endIndex + 1;
+
         // recheck if we still didn't found a number
         if (numberData != false) {
-          // instantiating the check for factorial variable
-          let checkForFactorial = false;
+          
+          // including the prefix operator to the part to replace if there is one
+          if (prefixOperator) 
+              numberData.startIndex--;
 
-          // checking if there is any stored solo value operator
-          if (soloValueOperator == null) {
+          // checking for a postfix operator
+          if (index < strCalcul.length) {
 
-            // if soloValueOperator is null check for the other, the factorial '!'
-            if (index< strCalcul.length) {
-              checkForFactorial = strCalcul[index];
+            // cache the tested char
+            const c = strCalcul[index];
 
-              // if we found it, store it
-              if (checkForFactorial == '!' && priorities[priority].operations['!'] != undefined) {
-                soloValueOperator = '!'
+            // if we find a postfix operator, store it
+            if (isPostfixOperator(c) && priorities[priority].operations[c] != undefined) {
+              postfixOperator = c
 
-                // including it to te part to replace
-                numberData.endIndex++;
-              }
-                
+              // including it to te part to replace
+              numberData.endIndex++;
             }
-          } else // including the sqrt symbol to the part to replace
-            numberData.startIndex--;
+              
+          }
 
-          // computing solo value operators if there is
-          if (soloValueOperator != null) {
-            // caching the result
-            numberData.number = priorities[priority].operations[soloValueOperator](numberData.number);
+          // computing prefix operator if there is
+          if (prefixOperator)
+            numberData.number = priorities[priority].operations[prefixOperator](numberData.number);
 
-            // replacing the number + operator to only the number
+          // computing postfix operator if there is
+          if (postfixOperator)
+            numberData.number = priorities[priority].operations[postfixOperator](numberData.number);
+
+          // if there was they are now computed and must be removed of the calcul
+          if (prefixOperator || postfixOperator) {
+
+            // replacing the number and operator(s) to only the number
             const updatedStringData = updateString(numberData.startIndex, numberData.endIndex, strCalcul, numberData.number);
 
             // setting the data
             strCalcul = updatedStringData.newString;
             index = updatedStringData.endOfUpdateIndex;
 
-            // reseting soloValueOperator
-            soloValueOperator = null;
+            // reseting thoses operators
+            postfixOperator = null;
+            prefixOperator = null;
           }
 
           // if this condition is true, it means that there is already a firstNumber
@@ -214,7 +221,7 @@ function ComputeCalcul(strIndex, strCalcul) {
   // this should only be your custom Errors
   // if you checked the potentials errors correctly
   } catch (exception) {
-    console.log(`${exception}`);
+    console.log(`${exception}\n`);
     process.exit();
   }
 
@@ -271,11 +278,11 @@ function ft_factorial(a) {
 
   // we can't compute factorial of negative number
   if (a < 0)
-    throw new Error("Value must be positive to calcul it's factorial.");
+    throw new Error("The value must be positive to calcul it's factorial.");
 
   // factorial of floating number is called and computed differently
   if (!isNumberInteger(a))
-    throw new Error("Value must be an integer to calcul it's factorial.");
+    throw new Error("The value must be an integer to calcul it's factorial.");
 
   // 0! is equal to 1
   if (a == 0)
@@ -409,9 +416,9 @@ function updateString(start, end, actualStr, newPart) {
   if (end >= actualStr.length)
     throw new Error("Out of string bounds at updateString()");
   if (start > end)
-    throw new Error("Wrond start/end values at UpdateString(): " + `${start}/${end}`);
+    throw new Error("Wrong start/end values at updateString(): " + `${start}/${end}`);
   if (start < 0)
-    throw new Error("Negative start index at UpdateString()");
+    throw new Error("Negative start index at updateString()");
 
   // cast newPart as a string in case it's not already
   let strNewPart = `${newPart}`;
@@ -448,6 +455,11 @@ function updateString(start, end, actualStr, newPart) {
       newString += actualStr[i];
       
     i++;
+  }
+
+  if (_options.steps !== false) {
+    console.log(`${_options.steps}: ${newString}`);
+    _options.steps++;
   }
 
   return {
@@ -520,19 +532,69 @@ function isSupportedOperator(operator) {
   return false;
 }
 
+// check if the requested operator is in the corresponding list
+function isPrefixOperator(operator) {
+  for (let i = 0; i < prefixOperators.length; i++) {
+
+    if (prefixOperators[i] == operator)
+      return true;
+  
+  }
+  
+  return false;
+}
+
+// check if the requested operator is in the corresponding list
+function isPostfixOperator(operator) {
+  for (let i = 0; i < prefixOperators.length; i++) {
+
+    if (postfixOperators[i] == operator)
+      return true;
+  
+  }
+  
+  return false;
+}
+
 /* ================== START OF THE PROGRAM ================ */
+
+// setting up the options
+const _options = {
+  steps: false
+};
+
+// loop through the args to get te options
+for (let argsIndex = 2; argsIndex < process.argv.length - 1; argsIndex++) {
+
+  // check for specific options
+  if (process.argv[argsIndex] == "-s")
+    _options.steps = 1;
+
+}
 
 // first get the calcul we have to resolve
 const calculToCompute =
-  process.argv.length >= 3 ? // check if it's in the args (the 2 firsts args are node path and current file path)
-    process.argv[2] :         // if so use it
-    "3+3*2/(2+(2-2+1))";      // else set it manually
+  process.argv.length >= 3 ?                  // check if it's in the args (the 2 firsts args are node path and current file path)
+    process.argv[process.argv.length - 1] :     // if so use it, it should be the last as options comme first
+    "";                                         // else set it to a default calcul
 
 // right away, return if the calcul is empty
 if (calculToCompute.length == 0) {
-  console.log("Empty calcul.");
+  // prints the supported operators
+  console.log("\nSupported operators: ['+', '-', '*', '/', '%', '!', '^', '√'].");
+  console.log("Parentheses are supported.");
+
+  // prints usage and options
+  console.log("\nUsage: node calculator.js <options> \"<calcul>\"");
+  console.log("Options:");
+  console.log("\t-s to see the calcul steps\n");
+  console.log("Empty calcul.\n");
   return;
 }
+
+// storing the prefix and postfix operators to recognize them later
+const postfixOperators = ['!'];
+const prefixOperators = ['√'];
 
 // setting the possible operations by their priority based on PEMDAS
 // (parentheses are always top priority, they are dealth with differently below)
@@ -580,8 +642,12 @@ for(let i = 0; i < calculToCompute.length; i++) {
   
 }
 
+// printing the base calcul if the steps option is on
+if (_options.steps !== false)
+  console.log(`\n0: ${cleanCalculToCompute}`);
+
 // caching the result data
 const finalResultData = ComputeCalcul(0, cleanCalculToCompute);
 
 // printing the result
-console.log("Result: " + finalResultData.number);
+console.log(`\n${cleanCalculToCompute} = ${finalResultData.number}\n`);
