@@ -122,10 +122,6 @@ function ComputeCalcul(strIndex, strCalcul) {
 
         // recheck if we still didn't found a number
         if (numberData != false) {
-          
-          // including the prefix operator to the part to replace if there is one
-          if (prefixOperator) 
-              numberData.startIndex--;
 
           // checking for a postfix operator
           if (index < strCalcul.length) {
@@ -134,22 +130,27 @@ function ComputeCalcul(strIndex, strCalcul) {
             const c = strCalcul[index];
 
             // if we find a postfix operator, store it
-            if (isPostfixOperator(c) && priorities[priority].operations[c] != undefined) {
+            if (isPostfixOperator(c) && priorities[priority].operations[c] != undefined)
               postfixOperator = c
-
-              // including it to te part to replace
-              numberData.endIndex++;
-            }
               
           }
 
           // computing prefix operator if there is
-          if (prefixOperator)
+          if (prefixOperator) {
             numberData.number = priorities[priority].operations[prefixOperator](numberData.number);
 
+            // including it the part to replace
+            numberData.startIndex--;
+          }
+            
+
           // computing postfix operator if there is
-          if (postfixOperator)
+          if (postfixOperator) {
             numberData.number = priorities[priority].operations[postfixOperator](numberData.number);
+
+            // including it to te part to replace
+            numberData.endIndex++;
+          }
 
           // if there was they are now computed and must be removed of the calcul
           if (prefixOperator || postfixOperator) {
