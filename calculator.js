@@ -221,7 +221,7 @@ function ComputeCalcul(strIndex, strCalcul) {
   // this should only be your custom Errors
   // if you checked the potentials errors correctly
   } catch (exception) {
-    console.log(`${exception}\n`);
+    console.log(`\n${exception}\n`);
     process.exit();
   }
 
@@ -580,6 +580,7 @@ const calculToCompute =
 
 // right away, return if the calcul is empty
 if (calculToCompute.length == 0) {
+
   // prints the supported operators
   console.log("\nSupported operators: ['+', '-', '*', '/', '%', '!', '^', '√'].");
   console.log("Parentheses are supported.");
@@ -588,7 +589,9 @@ if (calculToCompute.length == 0) {
   console.log("\nUsage: node calculator.js <options> \"<calcul>\"");
   console.log("Options:");
   console.log("\t-s to see the calcul steps\n");
+
   console.log("Empty calcul.\n");
+
   return;
 }
 
