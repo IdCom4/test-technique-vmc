@@ -115,7 +115,7 @@ function ComputeCalcul(strIndex, strCalcul) {
           // was not a number, nor an operator, nor a parenthese
           // it's an invalid synthax
           else
-            throw new Error("Invalid synthax: " + `${c} found at index ${index} in "${strCalcul}"`);
+            throw new Error("Invalid synthax: " + `'${c}' found at index ${index} in "${strCalcul}"`);
         }
         else
           index = numberData.endIndex + 1;
