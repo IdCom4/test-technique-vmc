@@ -400,7 +400,8 @@ function tryParseNumber(start, strCalcul, operator) {
     throw new Error("Invalid syntax: " + `'${strCalcul[start]}' found at index: ${start} in "${strCalcul}"`);
 
   // that means we have a number, so returning an object
-  // that contains it multiplied by it's sign, and it's end index
+  // that contains it multiplied by it's sign,
+  // and it's start and end indexes to know from where to where to replace in the string later
   return {
     number: result * sign,
     startIndex: start,
