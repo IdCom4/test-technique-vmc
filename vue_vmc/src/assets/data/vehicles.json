@@ -1,0 +1,90 @@
+[
+  {
+    "id": 0,
+    "brand": "Toyota",
+    "year": 2005,
+    "model": "Aygo",
+    "state": "Comme neuf",
+    "kilometers": 15000,
+    "dayPrice": 15, 
+    "description": "Une voiture simple mais fiable.",
+    "image": "0.jpg"
+  },
+  {
+    "id": 1,
+    "brand": "Toyota",
+    "year": 2005,
+    "model": "Aygo",
+    "state": "Abîmé",
+    "kilometers": 350000,
+    "dayPrice": 10, 
+    "description": "La voiture souffre de différents défauts de carrosserie et d'un kilométrage élevé, mais fonctionne parfaitement.",
+    "image": "1.jpg"
+  },
+  {
+    "id": 2,
+    "brand": "Mazda",
+    "year": 1995,
+    "model": "mx5",
+    "state": "Propre",
+    "kilometers": 78000,
+    "dayPrice": 20, 
+    "description": "Une voiture petite et très joueuse.",
+    "image": "2.jpg"
+  },
+  {
+    "id": 3,
+    "brand": "BMW",
+    "year": 1991,
+    "model": "Série 3 E36",
+    "state": "Propre",
+    "kilometers": 132000,
+    "dayPrice": 20, 
+    "description": "Une voiture de caractère.",
+    "image": "3.jpg"
+  },
+  {
+    "id": 4,
+    "brand": "Renault",
+    "year": 2014,
+    "model": "Twingo III",
+    "state": "Comme neuf",
+    "kilometers": 4000,
+    "dayPrice": 12, 
+    "description": "Une citadine incomparable.",
+    "image": "4.jpg"
+  },
+  {
+    "id": 5,
+    "brand": "Hummer",
+    "year": 2005,
+    "model": "Limousine H3",
+    "state": "Légèrement rayé",
+    "kilometers": 3000,
+    "dayPrice": 40, 
+    "description": "Attention, dur à garer !",
+    "image": "5.jpg"
+  },
+  {
+    "id": 6,
+    "brand": "Pagani",
+    "year": 2012,
+    "model": "Huayra",
+    "state": "Comme neuf",
+    "kilometers": 2,
+    "dayPrice": 1500, 
+    "description": "S'il vous plaît ne la rayez pas. Vraiment.",
+    "image": "6.jpg"
+  },
+  {
+    "id": 7,
+    "brand": "Fiat",
+    "year": 1999,
+    "model": "Multipla",
+    "state": "Éxiste",
+    "kilometers": 0,
+    "dayPrice": 0.99, 
+    "description": "La voiture la moins volée, c'est déjà ça !",
+    "image": "7.jpg"
+  }
+]
