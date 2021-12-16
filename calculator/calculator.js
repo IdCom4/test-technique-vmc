@@ -123,6 +123,12 @@ function ComputeCalcul(strIndex, strCalcul) {
         // recheck if we still didn't found a number
         if (numberData != false) {
 
+          // if this condition is true, it means that there is already a firstNumber
+          // and that we found a second one stored in numberData,
+          // but we never found any operator between
+          if (firstNumberData && !operator)
+            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
+
           // checking for a postfix operator
           if (index < strCalcul.length) {
 
@@ -166,12 +172,6 @@ function ComputeCalcul(strIndex, strCalcul) {
             postfixOperator = null;
             prefixOperator = null;
           }
-
-          // if this condition is true, it means that there is already a firstNumber
-          // and that we found a second one stored in numberData,
-          // but we never found any operator between
-          if (firstNumberData && !operator)
-            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
 
           // storing it in the right variable
           // if there is no firstNumber, storing it there
