@@ -565,7 +565,7 @@ const _options = {
   steps: false
 };
 
-// loop through the args to get te options
+// loop through the args to get the options
 for (let argsIndex = 2; argsIndex < process.argv.length - 1; argsIndex++) {
 
   // check for specific options
@@ -578,7 +578,7 @@ for (let argsIndex = 2; argsIndex < process.argv.length - 1; argsIndex++) {
 const calculToCompute =
   process.argv.length >= 3 ?                  // check if it's in the args (the 2 firsts args are node path and current file path)
     process.argv[process.argv.length - 1] :     // if so use it, it should be the last as options comme first
-    "";                                         // else set it to a default calcul
+    "";                                         // else set it to a default calcul if you wish, or let it empty
 
 // right away, return if the calcul is empty
 if (calculToCompute.length == 0) {
