@@ -87,7 +87,7 @@ function ComputeCalcul(strIndex, strCalcul) {
                 parentheseScope--;
               index++;
 
-              // if the parentheseScope == 0, it means we reached the closing parenthese of the first one
+              // if the parentheseScope == 0, it means we reached the closing parenthese matching the first opening one
             } while (parentheseScope > 0 && index < strCalcul.length);
 
             // replacing this part by it's result
