@@ -1,234 +1,6 @@
-function ComputeCalcul(strIndex, strCalcul) {
-  
-  try {
+/* ================ FUNCTIONS ================ */
 
-    // we'll do the operations as follow:
-    // we'll store a number, then the following operator, then the following number,
-    // and then compute those data
-
-    // since there is priorities, we'll do priority passes, from higher to lower
-    for (let priority = 0; priority < priorities.length; priority++) {
-
-      // create the vars
-      let firstNumberData = null;
-      let secondNumberData = null;
-
-      // operator is used to store any operator we come across
-      let operator = null;
-      // currentPriorityOperator is used to store an operator of the current priority
-      let currentPriorityOperator = null;
-      // those are used to store the operators that only requires one value, like the factorial '!'
-      let prefixOperator = null;
-      let postfixOperator = null;
-
-      // we do this to keep the initial strIndex in memory
-      let index = strIndex;
-
-      while (index < strCalcul.length) {
-
-        // cache the current char
-        const c = strCalcul[index];
-
-        // trying to parse a number
-        let numberData = tryParseNumber(index, strCalcul, currentPriorityOperator);
-
-        // means we didn't find any number
-        if (numberData == false) {
-
-          // check first for the prefix operators as they only requires one value and come before it
-          // and check if we are at the right priority pass for this operator
-          if (isPrefixOperator(c) && priorities[priority].operations[c] != undefined) {
-            prefixOperator = c;
-            index++;
-          }
-
-          // checking if the symbol is an operator
-          else if (isSupportedOperator(c)) {
-
-            operator = c;
-
-            // check for extra currentPriorityOperator
-            if (currentPriorityOperator != null)
-              throw new Error("Invalid synthax: extra operator '" + c + "' found at index " + `${index} in "${strCalcul}"`);
-  
-            // checking if it's an operation of the current priority
-            // and if so setting operator to it's value
-            if (priorities[priority].operations[c] != undefined)
-              currentPriorityOperator = c;
-
-            index++;
-          }
-
-          // checking if we came across a parenthese
-          else if (c == '(') {
-            // storing the parenthese index
-            const openingParentheseIndex = index;
-
-            // since everything inside a parenthese is to be computed before everything outside,
-            // it's basically a separated calcul, so we compute it recursively, starting from just after the parenthese
-            // it's gonna return the result of the calcul contained inside the parenthese, nothing more
-            const parentheseResult = ComputeCalcul(index + 1, strCalcul);
-
-            // since every parentheses inside this one is gonna be computed recursively,
-            // we just need to go to the closing parenthese matching the current one
-
-            // for that, we need to keep track of the scope,
-            // to not return at the first closing parenthese if we came across several opening ones
-            // ex: (()
-            let parentheseScope = 0;
-
-            do {
-              // in this case, we go deeper in the parenthese scope
-              if (strCalcul[index] == '(')
-                parentheseScope++;
-              
-              // in this case, we go up in the scope
-              if (strCalcul[index] == ')')
-                parentheseScope--;
-              index++;
-
-              // if the parentheseScope == 0, it means we reached the closing parenthese matching the first opening one
-            } while (parentheseScope > 0 && index < strCalcul.length);
-
-            // replacing this part by it's result
-            const updatedStringData = updateString(openingParentheseIndex, index - 1, strCalcul, parentheseResult.number);
-
-            // setting the data
-            strCalcul = updatedStringData.newString;
-            index = updatedStringData.endOfUpdateIndex;
-
-            numberData = {
-              number: parentheseResult.number,
-              startIndex: openingParentheseIndex,
-              endIndex: updatedStringData.endOfUpdateIndex - 1
-            };
-      
-          }
-          // if we come across a closing parenthese here,
-          // it means we currently are in a recursive call of this function,
-          // computing the inside of a parenthese
-          // so we break of this loop to continue the possible remaining priority passes before returning
-          else if (c == ')')
-            break;
-          
-          // if we arrive here, it means that what we found
-          // was not a number, nor an operator, nor a parenthese
-          // it's an invalid synthax
-          else
-            throw new Error("Invalid synthax: " + `'${c}' found at index ${index} in "${strCalcul}"`);
-        }
-        else
-          index = numberData.endIndex + 1;
-
-        // recheck if we still didn't found a number
-        if (numberData != false) {
-
-          // if this condition is true, it means that there is already a firstNumber
-          // and that we found a second one stored in numberData,
-          // but we never found any operator between
-          if (firstNumberData && !operator)
-            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
-
-          // checking for a postfix operator
-          if (index < strCalcul.length) {
-
-            // cache the tested char
-            const c = strCalcul[index];
-
-            // if we find a postfix operator, store it
-            if (isPostfixOperator(c) && priorities[priority].operations[c] != undefined)
-              postfixOperator = c
-              
-          }
-
-          // computing prefix operator if there is
-          if (prefixOperator) {
-            numberData.number = priorities[priority].operations[prefixOperator](numberData.number);
-
-            // including it the part to replace
-            numberData.startIndex--;
-          }
-            
-
-          // computing postfix operator if there is
-          if (postfixOperator) {
-            numberData.number = priorities[priority].operations[postfixOperator](numberData.number);
-
-            // including it to te part to replace
-            numberData.endIndex++;
-          }
-
-          // if there was they are now computed and must be removed of the calcul
-          if (prefixOperator || postfixOperator) {
-
-            // replacing the number and operator(s) to only the number
-            const updatedStringData = updateString(numberData.startIndex, numberData.endIndex, strCalcul, numberData.number);
-
-            // setting the data
-            strCalcul = updatedStringData.newString;
-            index = updatedStringData.endOfUpdateIndex;
-
-            // reseting thoses operators
-            postfixOperator = null;
-            prefixOperator = null;
-          }
-
-          // storing it in the right variable
-          // if there is no firstNumber, storing it there
-          // or if there is no currentPriorityOperator
-          // because it means that the previously stored number in firstNumberData
-          // if for a calcul of lower priority than the current
-          if (!firstNumberData || !currentPriorityOperator) firstNumberData = numberData;
-          // we store it in the second only if there is a firstNumber and an operator
-          else secondNumberData = numberData;
-
-        }
-
-        // checking if we have all the required data to do the maths
-        if (firstNumberData && secondNumberData) {
-
-          // check is there is a valid currentPriorityOperator
-          if (currentPriorityOperator == null)
-            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
-
-          // doing the calcul
-          const result = priorities[priority].operations[currentPriorityOperator](firstNumberData.number, secondNumberData.number);
-
-          // updating the strCalcul by replacing the 2 numbers and the operator to only the result
-          const updatedStringData = updateString(firstNumberData.startIndex, secondNumberData.endIndex, strCalcul, result);
-
-          // setting the data
-          strCalcul = updatedStringData.newString;
-          index = updatedStringData.endOfUpdateIndex;
-
-          // we know that there is a number here,
-          // and we have all the required data to store it
-          firstNumberData = {
-            number: result,
-            startIndex: firstNumberData.startIndex,
-            endIndex: updatedStringData.endOfUpdateIndex
-          };
-
-          secondNumberData = null;
-          currentPriorityOperator = null;
-        }
-      }
-    }
-
-    // returning the only value that remains
-    return tryParseNumber(strIndex, strCalcul, null);
-  
-  // catch exception if any
-  // this should only be your custom Errors
-  // if you checked the potentials errors correctly
-  } catch (exception) {
-    console.log(`\n${exception}\n`);
-    process.exit();
-  }
-
-}
-
-// priority 0 operation functions
+/* priority 0 operation functions */
 function ft_power(a, b) {
   return a ** b;
 }
@@ -299,7 +71,7 @@ function ft_factorial(a) {
   return factorial;
 }
 
-// some utility functions
+/* some utility functions */
 
 // check if the next chars represents a number, and if so returns it
 function tryParseNumber(start, strCalcul, operator) {
@@ -558,6 +330,241 @@ function isPostfixOperator(operator) {
   return false;
 }
 
+/* ================== CORE FUNCTION ================ */
+
+// this function take a string representing a calcul and an index to tell it where to start computing it,
+// compute it from the given index and return an object containing the calcul's result,
+// as well as 2 indexes representing the portion of the string calcul that has been computed
+function ComputeCalcul(strIndex, strCalcul) {
+  
+  try {
+
+    // we'll do the operations as follow:
+    // we'll store a number, then the following operator, then the following number,
+    // and then compute those data
+
+    // since there is priorities, we'll do priority passes, from higher to lower
+    for (let priority = 0; priority < priorities.length; priority++) {
+
+      // create the vars
+      let firstNumberData = null;
+      let secondNumberData = null;
+
+      // operator is used to store any operator we come across
+      let operator = null;
+      // currentPriorityOperator is used to store an operator of the current priority
+      let currentPriorityOperator = null;
+      // those are used to store the operators that only requires one value, like the factorial '!'
+      let prefixOperator = null;
+      let postfixOperator = null;
+
+      // we do this to keep the initial strIndex in memory
+      let index = strIndex;
+
+      while (index < strCalcul.length) {
+
+        // cache the current char
+        const c = strCalcul[index];
+
+        // trying to parse a number
+        let numberData = tryParseNumber(index, strCalcul, currentPriorityOperator);
+
+        // means we didn't find any number
+        if (numberData == false) {
+
+          // check first for the prefix operators as they only requires one value and come before it
+          // and check if we are at the right priority pass for this operator
+          if (isPrefixOperator(c) && priorities[priority].operations[c] != undefined) {
+            prefixOperator = c;
+            index++;
+          }
+
+          // checking if the symbol is an operator
+          else if (isSupportedOperator(c)) {
+
+            operator = c;
+
+            // check for extra currentPriorityOperator
+            if (currentPriorityOperator != null)
+              throw new Error("Invalid synthax: extra operator '" + c + "' found at index " + `${index} in "${strCalcul}"`);
+  
+            // checking if it's an operation of the current priority
+            // and if so setting operator to it's value
+            if (priorities[priority].operations[c] != undefined)
+              currentPriorityOperator = c;
+
+            index++;
+          }
+
+          // checking if we came across a parenthese
+          else if (c == '(') {
+            // storing the parenthese index
+            const openingParentheseIndex = index;
+
+            // since everything inside a parenthese is to be computed before everything outside,
+            // it's basically a separated calcul, so we compute it recursively, starting from just after the parenthese
+            // it's gonna return the result of the calcul contained inside the parenthese, nothing more
+            const parentheseResult = ComputeCalcul(index + 1, strCalcul);
+
+            // since every parentheses inside this one is gonna be computed recursively,
+            // we just need to go to the closing parenthese matching the current one
+
+            // for that, we need to keep track of the scope,
+            // to not return at the first closing parenthese if we came across several opening ones
+            // ex: (()
+            let parentheseScope = 0;
+
+            do {
+              // in this case, we go deeper in the parenthese scope
+              if (strCalcul[index] == '(')
+                parentheseScope++;
+              
+              // in this case, we go up in the scope
+              if (strCalcul[index] == ')')
+                parentheseScope--;
+              index++;
+
+              // if the parentheseScope == 0, it means we reached the closing parenthese matching the first opening one
+            } while (parentheseScope > 0 && index < strCalcul.length);
+
+            // replacing this part by it's result
+            const updatedStringData = updateString(openingParentheseIndex, index - 1, strCalcul, parentheseResult.number);
+
+            // setting the data
+            strCalcul = updatedStringData.newString;
+            index = updatedStringData.endOfUpdateIndex;
+
+            numberData = {
+              number: parentheseResult.number,
+              startIndex: openingParentheseIndex,
+              endIndex: updatedStringData.endOfUpdateIndex - 1
+            };
+      
+          }
+          // if we come across a closing parenthese here,
+          // it means we currently are in a recursive call of this function,
+          // computing the inside of a parenthese
+          // so we break of this loop to continue the possible remaining priority passes before returning
+          else if (c == ')')
+            break;
+          
+          // if we arrive here, it means that what we found
+          // was not a number, nor an operator, nor a parenthese
+          // it's an invalid synthax
+          else
+            throw new Error("Invalid synthax: " + `'${c}' found at index ${index} in "${strCalcul}"`);
+        }
+        else
+          index = numberData.endIndex + 1;
+
+        // recheck if we still didn't found a number
+        if (numberData != false) {
+
+          // if this condition is true, it means that there is already a firstNumber
+          // and that we found a second one stored in numberData,
+          // but we never found any operator between
+          if (firstNumberData && !operator)
+            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
+
+          // checking for a postfix operator
+          if (index < strCalcul.length) {
+
+            // cache the tested char
+            const c = strCalcul[index];
+
+            // if we find a postfix operator, store it
+            if (isPostfixOperator(c) && priorities[priority].operations[c] != undefined)
+              postfixOperator = c
+              
+          }
+
+          // computing prefix operator if there is
+          if (prefixOperator) {
+            numberData.number = priorities[priority].operations[prefixOperator](numberData.number);
+
+            // including it the part to replace
+            numberData.startIndex--;
+          }
+            
+
+          // computing postfix operator if there is
+          if (postfixOperator) {
+            numberData.number = priorities[priority].operations[postfixOperator](numberData.number);
+
+            // including it to te part to replace
+            numberData.endIndex++;
+          }
+
+          // if there was they are now computed and must be removed of the calcul
+          if (prefixOperator || postfixOperator) {
+
+            // replacing the number and operator(s) to only the number
+            const updatedStringData = updateString(numberData.startIndex, numberData.endIndex, strCalcul, numberData.number);
+
+            // setting the data
+            strCalcul = updatedStringData.newString;
+            index = updatedStringData.endOfUpdateIndex;
+
+            // reseting thoses operators
+            postfixOperator = null;
+            prefixOperator = null;
+          }
+
+          // storing it in the right variable
+          // if there is no firstNumber, storing it there
+          // or if there is no currentPriorityOperator
+          // because it means that the previously stored number in firstNumberData
+          // if for a calcul of lower priority than the current
+          if (!firstNumberData || !currentPriorityOperator) firstNumberData = numberData;
+          // we store it in the second only if there is a firstNumber and an operator
+          else secondNumberData = numberData;
+
+        }
+
+        // checking if we have all the required data to do the maths
+        if (firstNumberData && secondNumberData) {
+
+          // check is there is a valid currentPriorityOperator
+          if (currentPriorityOperator == null)
+            throw new Error("Missing operator at index " + (firstNumberData.endIndex + 1) + ` in "${strCalcul}"`);
+
+          // doing the calcul
+          const result = priorities[priority].operations[currentPriorityOperator](firstNumberData.number, secondNumberData.number);
+
+          // updating the strCalcul by replacing the 2 numbers and the operator to only the result
+          const updatedStringData = updateString(firstNumberData.startIndex, secondNumberData.endIndex, strCalcul, result);
+
+          // setting the data
+          strCalcul = updatedStringData.newString;
+          index = updatedStringData.endOfUpdateIndex;
+
+          // we know that there is a number here,
+          // and we have all the required data to store it
+          firstNumberData = {
+            number: result,
+            startIndex: firstNumberData.startIndex,
+            endIndex: updatedStringData.endOfUpdateIndex
+          };
+
+          secondNumberData = null;
+          currentPriorityOperator = null;
+        }
+      }
+    }
+
+    // returning the only value that remains
+    return tryParseNumber(strIndex, strCalcul, null);
+  
+  // catch exception if any
+  // this should only be your custom Errors
+  // if you checked the potentials errors correctly
+  } catch (exception) {
+    console.log(`\n${exception}\n`);
+    process.exit();
+  }
+
+}
+
 /* ================== START OF THE PROGRAM ================ */
 
 // setting up the options
@@ -574,7 +581,7 @@ for (let argsIndex = 2; argsIndex < process.argv.length - 1; argsIndex++) {
 
 }
 
-// first get the calcul we have to resolve
+// get the calcul we have to resolve
 const calculToCompute =
   process.argv.length >= 3 ?                  // check if it's in the args (the 2 firsts args are node path and current file path)
     process.argv[process.argv.length - 1] :     // if so use it, it should be the last as options comme first
