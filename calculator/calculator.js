@@ -514,7 +514,7 @@ function ComputeCalcul(strIndex, strCalcul) {
           // if there is no firstNumber, storing it there
           // or if there is no currentPriorityOperator
           // because it means that the previously stored number in firstNumberData
-          // if for a calcul of lower priority than the current
+          // is for a calcul of lower priority than the current
           if (!firstNumberData || !currentPriorityOperator) firstNumberData = numberData;
           // we store it in the second only if there is a firstNumber and an operator
           else secondNumberData = numberData;
