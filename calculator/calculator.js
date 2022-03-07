@@ -560,7 +560,7 @@ function ComputeCalcul(strIndex, strCalcul) {
   // if you checked the potentials errors correctly
   } catch (exception) {
     console.log(`\n${exception}\n`);
-    process.exit();
+    process.exit(1);
   }
 
 }
@@ -587,7 +587,7 @@ const calculToCompute =
     process.argv[process.argv.length - 1] :     // if so use it, it should be the last as options comme first
     "";                                         // else set it to a default calcul if you wish, or let it empty
 
-// right away, return if the calcul is empty
+// right away, exit if the calcul is empty
 if (calculToCompute.length == 0) {
 
   // prints the supported operators
@@ -597,11 +597,9 @@ if (calculToCompute.length == 0) {
   // prints usage and options
   console.log("\nUsage: node calculator.js <options> \"<calcul>\"");
   console.log("Options:");
-  console.log("\t-s to see the calcul steps\n");
+  console.log("\t-s to see the computation steps\n");
 
-  console.log("Empty calcul.\n");
-
-  return;
+  process.exit(1);
 }
 
 // storing the prefix and postfix operators to recognize them later
